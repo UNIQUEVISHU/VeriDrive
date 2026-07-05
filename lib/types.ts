@@ -9,24 +9,24 @@ export type ComponentKey =
   | "tires";
 
 export interface SensorReading {
-  t: number; // seconds since session start
-  engineTemp: number; // deg C
+  t: number;
+  engineTemp: number;
   rpm: number;
-  vibration: number; // mm/s RMS
-  batteryVoltage: number; // V
-  brakePadWear: number; // %
-  coolantLevel: number; // %
-  oilPressure: number; // psi
-  tirePressure: number; // psi
-  speed: number; // km/h
+  vibration: number;
+  batteryVoltage: number;
+  brakePadWear: number;
+  coolantLevel: number;
+  oilPressure: number;
+  tirePressure: number;
+  speed: number;
 }
 
 export interface ComponentHealth {
   key: ComponentKey;
   label: string;
-  health: number; // 0-100
-  rul: number; // remaining useful life, in days
-  failureProbability: number; // 0-100 %
+  health: number;
+  rul: number;
+  failureProbability: number;
   severity: Severity;
 }
 
@@ -34,13 +34,25 @@ export interface Vehicle {
   id: string;
   name: string;
   model: string;
+
   driver: string;
+
   odometer: number;
+
   location: string;
+
   healthScore: number;
+
   severity: Severity;
+
   lastSync: string;
+
   components: ComponentHealth[];
+
+  // NEW FIELDS
+  batteryHealth: number;
+
+  lastSeen: string;
 }
 
 export interface AlertItem {
