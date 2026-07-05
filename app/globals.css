@@ -22,6 +22,7 @@
   --font-display: var(--font-display);
   --font-sans: var(--font-sans);
   --font-mono: var(--font-mono);
+  --animate-scroll: scroll var(--animation-duration, 40s) linear infinite var(--animation-direction, forwards);
 }
 
 * {
@@ -79,6 +80,13 @@ body {
 
 .animate-spotlight {
   animation: spotlight 1.4s ease forwards;
+}
+
+/* Infinite moving cards scroll */
+@keyframes scroll {
+  to {
+    transform: translate(calc(-50% - 0.5rem));
+  }
 }
 
 /* Reduced motion respect */

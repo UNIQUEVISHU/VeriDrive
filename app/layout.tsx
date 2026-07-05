@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { FleetProvider } from "@/app/providers";
 import { Sidebar } from "@/components/dashboard/sidebar";
+import { Footer } from "@/components/footer"; // 1. Yahan import karein
 
 export const metadata: Metadata = {
   title: "VeriDrive — Edge AI Predictive Maintenance",
@@ -23,7 +24,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="antialiased">
         <FleetProvider>
           <Sidebar />
-          <div className="lg:pl-60">{children}</div>
+          <div className="lg:pl-60">
+            <main className="min-h-[calc(100vh-100px)]"> {/* 2. Main content area */}
+              {children}
+            </main>
+            <Footer /> {/* 3. Yahan footer add kiya */}
+          </div>
         </FleetProvider>
       </body>
     </html>

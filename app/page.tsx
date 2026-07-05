@@ -1,32 +1,52 @@
 "use client";
-import { Activity, Gauge, ShieldAlert, Truck, Wrench } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Activity } from "lucide-react";
 import { useFleetContext } from "@/app/providers";
 import { Topbar } from "@/components/dashboard/topbar";
 import { DiagnosticGrid } from "@/components/dashboard/diagnostic-grid";
 import { Spotlight } from "@/components/aceternity/spotlight";
 import { HealthGauge } from "@/components/dashboard/health-gauge";
-import { StatCard } from "@/components/dashboard/stat-card";
-import { VehicleCard } from "@/components/dashboard/vehicle-card";
-import { AlertRow } from "@/components/dashboard/alert-row";
 import { SensorChart } from "@/components/dashboard/sensor-chart";
+import { FleetTrendChart, TrendPoint } from "@/components/dashboard/fleet-trend-chart";
+import { ComponentRiskChart } from "@/components/dashboard/component-risk-chart";
+import { PipelineStrip } from "@/components/dashboard/pipeline-strip";
+import { ImpactStats } from "@/components/dashboard/impact-stats";
+import { AttentionSpotlight } from "@/components/dashboard/attention-spotlight";
+import { SectionHeading } from "@/components/dashboard/section-heading";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { buildAlerts } from "@/lib/simulate";
+import { WhyEdgeSection } from "@/components/dashboard/why-edge-section";
+import { ExplainabilityPanel } from "@/components/dashboard/explainability-panel";
+import { DemoModeBanner } from "@/components/dashboard/demo-mode-banner";
+
+const TREND_LEN = 30;
 
 export default function OverviewPage() {
-  const { vehicles, histories } = useFleetContext();
-  const avgHealth = Math.round(vehicles.reduce((s, v) => s + v.healthScore, 0) / vehicles.length);
+  const { vehicles, histories, tick } = useFleetContext();
+  const avgHealth = vehicles.length
+    ? Math.round(vehicles.reduce((s, v) => s + v.healthScore, 0) / vehicles.length)
+    : 0;
   const critical = vehicles.filter((v) => v.severity === "critical");
   const warning = vehicles.filter((v) => v.severity === "warning");
-  const alerts = buildAlerts(vehicles).slice(0, 4);
   const focusVehicle = critical[0] ?? warning[0] ?? vehicles[0];
   const focusHistory = histories[focusVehicle?.id] ?? [];
+
+  const [trend, setTrend] = useState<TrendPoint[]>([]);
+  const lastTick = useRef(-1);
+  useEffect(() => {
+    if (tick === lastTick.current) return;
+    lastTick.current = tick;
+    setTrend((prev) => [...prev, { tick, avgHealth }].slice(-TREND_LEN));
+  }, [tick, avgHealth]);
 
   return (
     <div>
       <Topbar title="Fleet Overview" subtitle="Live edge-to-cloud telemetry across all monitored vehicles" />
 
+      <DemoModeBanner />
+
+      {/* HERO */}
       <section className="relative overflow-hidden border-b border-white/10 px-6 py-10 lg:px-10">
         <DiagnosticGrid />
         <Spotlight className="left-1/2 top-0 -translate-x-1/2" />
@@ -39,10 +59,11 @@ export default function OverviewPage() {
               Catch failures before the road does.
             </h2>
             <p className="mt-3 text-sm leading-relaxed text-neutral-400">
-              VeriDrive runs an on-device inference stack — XGBoost for failure classification,
-              LSTM for time-series degradation, and Isolation Forest for anomaly detection — to turn
-              raw sensor streams into a single, trustworthy health score per vehicle, synced to the
-              cloud the moment connectivity returns.
+              Built for large commercial vehicle fleets, VeriDrive is designed around an
+              on-device inference pipeline — XGBoost for failure classification, LSTM for
+              time-series degradation, and Isolation Forest for anomaly detection — so a
+              vehicle&apos;s health score is computed locally and only anomaly summaries sync
+              to the cloud when connectivity allows.
             </p>
             <div className="mt-5 flex gap-3">
               <Button asChild size="lg">
@@ -57,58 +78,95 @@ export default function OverviewPage() {
         </div>
       </section>
 
-      <section className="grid grid-cols-1 gap-4 px-6 py-8 sm:grid-cols-2 lg:grid-cols-4 lg:px-10">
-        <StatCard icon={Truck} label="Vehicles monitored" value={vehicles.length} tone="default" />
-        <StatCard icon={ShieldAlert} label="Critical alerts" value={critical.length} tone="critical" />
-        <StatCard icon={Gauge} label="Warnings" value={warning.length} tone="warning" />
-        <StatCard icon={Wrench} label="Avg. fleet health" value={avgHealth} suffix="/ 100" tone="normal" />
+      {/* IMPACT / ROI */}
+      <section className="px-6 py-8 lg:px-10">
+        <SectionHeading
+          eyebrow="Business impact"
+          title="What predictive maintenance is worth, today"
+          description="Estimated savings based on issues caught early across the current fleet."
+        />
+        <ImpactStats
+          vehiclesMonitored={vehicles.length}
+          criticalCount={critical.length}
+          warningCount={warning.length}
+        />
       </section>
 
-      <section className="grid grid-cols-1 gap-6 px-6 pb-10 lg:grid-cols-3 lg:px-10">
-        <div className="lg:col-span-2">
-          <div className="mb-3 flex items-center justify-between">
-            <h3 className="font-display text-sm font-semibold text-neutral-200">Fleet snapshot</h3>
-            <Link href="/fleet" className="text-xs text-teal-300 hover:underline">
-              View all →
-            </Link>
+      {/* CONCRETE AI PREDICTION */}
+      {focusVehicle && (
+        <section className="px-6 pb-8 lg:px-10">
+          <SectionHeading
+            eyebrow="Right now"
+            title="Highest-priority vehicle"
+            description="The model's single most urgent prediction across the fleet, updated live."
+          />
+          <AttentionSpotlight vehicle={focusVehicle} />
+          <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <ExplainabilityPanel vehicleName={focusVehicle?.name} />
           </div>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            {vehicles.slice(0, 4).map((v) => (
-              <VehicleCard key={v.id} vehicle={v} />
-            ))}
-          </div>
-        </div>
+        </section>
+      )}
 
-        <div>
-          <div className="mb-3 flex items-center justify-between">
-            <h3 className="font-display text-sm font-semibold text-neutral-200">Priority alerts</h3>
-            <Link href="/alerts" className="text-xs text-teal-300 hover:underline">
-              View all →
-            </Link>
-          </div>
-          <div className="flex flex-col gap-3">
-            {alerts.length === 0 && (
-              <Card className="p-5 text-sm text-neutral-500">All systems nominal — no active alerts.</Card>
-            )}
-            {alerts.map((a, i) => (
-              <AlertRow key={a.id} alert={a} index={i} />
-            ))}
-          </div>
+      {/* ARCHITECTURE EXPLAINER */}
+      <section className="px-6 pb-8 lg:px-10">
+        <SectionHeading
+          eyebrow="Under the hood"
+          title="How the edge pipeline works"
+          description="From raw sensor to actionable alert — entirely on-device, cloud-optional."
+        />
+        <PipelineStrip />
+      </section>
+
+      {/* WHY EDGE, WHY NOW */}
+      <WhyEdgeSection />
+
+      {/* TRENDS */}
+      <section className="px-6 pb-10 lg:px-10">
+        <SectionHeading eyebrow="Trends" title="Fleet-wide signals" />
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>Fleet health trend</CardTitle>
+              <CardDescription>Average health score across all vehicles, updated every cycle</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <FleetTrendChart data={trend} />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Component risk breakdown</CardTitle>
+              <CardDescription>Average failure probability by component, across the whole fleet</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ComponentRiskChart vehicles={vehicles} />
+            </CardContent>
+          </Card>
         </div>
       </section>
 
+      {/* LIVE TELEMETRY */}
       <section className="px-6 pb-14 lg:px-10">
+        <SectionHeading
+          eyebrow="Live"
+          title="Telemetry stream"
+          description={
+            focusVehicle
+              ? `Simulated sensor data from ${focusVehicle.name}, the vehicle needing attention most.`
+              : "No vehicles in fleet yet."
+          }
+          align="between"
+          action={
+            focusVehicle ? (
+              <Link href={`/vehicle/${focusVehicle.id}`} className="text-xs text-teal-300 hover:underline">
+                Full diagnostics →
+              </Link>
+            ) : undefined
+          }
+        />
         <Card>
-          <CardHeader className="flex-row items-center justify-between space-y-0">
-            <div>
-              <CardTitle>Live telemetry — {focusVehicle?.name}</CardTitle>
-              <CardDescription>Highest-priority vehicle right now, streaming from the edge node</CardDescription>
-            </div>
-            <Link href={`/vehicle/${focusVehicle?.id}`} className="text-xs text-teal-300 hover:underline">
-              Full diagnostics →
-            </Link>
-          </CardHeader>
-          <CardContent className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          <CardContent className="grid grid-cols-1 gap-6 pt-6 sm:grid-cols-2 lg:grid-cols-4">
             <SensorChart data={focusHistory} metric="engineTemp" />
             <SensorChart data={focusHistory} metric="vibration" />
             <SensorChart data={focusHistory} metric="batteryVoltage" />
