@@ -16,10 +16,11 @@ export default function FleetPage() {
   const filtered = useMemo(
     () =>
       vehicles.filter((v) => {
-        const matchesQuery =
-          v.name.toLowerCase().includes(query.toLowerCase()) ||
-          v.id.toLowerCase().includes(query.toLowerCase()) ||
-          v.driver.toLowerCase().includes(query.toLowerCase());
+const matchesQuery =
+  v.name.toLowerCase().includes(query.toLowerCase()) ||
+  v.id.toLowerCase().includes(query.toLowerCase()) ||
+  v.driver.toLowerCase().includes(query.toLowerCase()) ||
+  v.location.toLowerCase().includes(query.toLowerCase());
         const matchesFilter = filter === "all" || v.severity === filter;
         return matchesQuery && matchesFilter;
       }),
@@ -28,7 +29,10 @@ export default function FleetPage() {
 
   return (
     <div>
-      <Topbar title="Fleet" subtitle={`${vehicles.length} vehicles under active monitoring`} />
+      <Topbar
+  title="Fleet Management"
+  subtitle={`${vehicles.length} Tata vehicles connected to Edge AI monitoring`}
+/>
 
       <div className="flex flex-col gap-4 px-6 py-6 sm:flex-row sm:items-center sm:justify-between lg:px-10">
         <div className="relative w-full max-w-sm">
@@ -36,7 +40,7 @@ export default function FleetPage() {
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search by vehicle, ID, or driver..."
+            placeholder="Search by vehicle name, ID, location or driver..."
             className="pl-9"
           />
         </div>
@@ -56,7 +60,7 @@ export default function FleetPage() {
         ))}
         {filtered.length === 0 && (
           <p className="col-span-full py-10 text-center text-sm text-neutral-500">
-            No vehicles match your search.
+            No Tata vehicles matched your search criteria.
           </p>
         )}
       </div>
