@@ -1,9 +1,10 @@
 "use client";
+
 import Link from "next/link";
-import { ChevronRight, MapPin } from "lucide-react";
+import { MapPin, Zap } from "lucide-react";
 import { GlowCard } from "@/components/aceternity/glow-card";
 import { Badge } from "@/components/ui/badge";
-import { MiniHealthBar } from "@/components/dashboard/health-gauge";
+import { Progress } from "@/components/ui/progress";
 import { Vehicle } from "@/lib/types";
 
 const GLOW: Record<Vehicle["severity"], string> = {
@@ -12,40 +13,102 @@ const GLOW: Record<Vehicle["severity"], string> = {
   critical: "240,69,92",
 };
 
+function badgeColor(severity: Vehicle["severity"]) {
+  switch (severity) {
+    case "normal":
+      return "bg-emerald-500/20 text-emerald-400";
+    case "warning":
+      return "bg-yellow-500/20 text-yellow-400";
+    case "critical":
+      return "bg-red-500/20 text-red-400";
+  }
+}
+
 export function VehicleCard({ vehicle }: { vehicle: Vehicle }) {
-  const worst = [...vehicle.components].sort((a, b) => a.health - b.health)[0];
   return (
     <Link href={`/vehicle/${vehicle.id}`}>
-      <GlowCard glowColor={GLOW[vehicle.severity]} className="h-full p-5 transition-transform hover:-translate-y-0.5">
+      <GlowCard
+        glowColor={GLOW[vehicle.severity]}
+        className="h-full rounded-2xl border border-white/10 bg-[#0f172a] p-6 transition-all duration-300 hover:scale-[1.02]"
+      >
+        {/* Header */}
         <div className="flex items-start justify-between">
           <div>
-            <p className="font-display text-sm font-semibold text-neutral-100">{vehicle.name}</p>
-            <p className="text-xs text-neutral-500">{vehicle.id} · {vehicle.model}</p>
+            <h3 className="text-xl font-semibold text-white">
+              {vehicle.name}
+            </h3>
+
+            <p className="mt-1 text-sm text-neutral-400">
+              {vehicle.id}
+            </p>
           </div>
-          <Badge variant={vehicle.severity}>{vehicle.severity}</Badge>
+
+          <Badge
+            className={`${badgeColor(vehicle.severity)} border-0 capitalize`}
+          >
+            {vehicle.severity}
+          </Badge>
         </div>
 
-        <div className="mt-4 flex items-center gap-3">
-          <span className="font-mono text-2xl font-semibold text-neutral-50">{vehicle.healthScore}</span>
-          <span className="text-xs text-neutral-500">/100 health score</span>
-        </div>
-        <MiniHealthBar value={vehicle.healthScore} className="mt-2" />
+        {/* Score + Mileage */}
+        <div className="mt-6 grid grid-cols-2 gap-6">
+          <div>
+            <p className="text-xs uppercase tracking-wide text-neutral-500">
+              Health Score
+            </p>
 
-        <div className="mt-4 flex items-center justify-between text-xs text-neutral-500">
-          <span className="flex items-center gap-1">
-            <MapPin className="h-3 w-3" /> {vehicle.location}
-          </span>
+            <h2
+              className={`mt-2 text-4xl font-bold ${
+                vehicle.healthScore >= 85
+                  ? "text-emerald-400"
+                  : vehicle.healthScore >= 70
+                  ? "text-yellow-400"
+                  : vehicle.healthScore >= 50
+                  ? "text-orange-400"
+                  : "text-red-500"
+              }`}
+            >
+              {vehicle.healthScore}%
+            </h2>
+          </div>
+
+          <div>
+            <p className="text-xs uppercase tracking-wide text-neutral-500">
+              Mileage
+            </p>
+
+            <h2 className="mt-2 text-3xl font-bold text-white">
+              {(vehicle.odometer / 1000).toFixed(1)}K
+            </h2>
+          </div>
         </div>
 
-        <div className="mt-3 rounded-lg border border-white/5 bg-white/[0.02] px-3 py-2 text-xs">
-          <span className="text-neutral-500">Weakest link — </span>
-          <span className="text-neutral-300">{worst.label}</span>
-          <span className="ml-1 text-neutral-500">({worst.health}% · RUL {worst.rul}d)</span>
+        {/* Location */}
+        <div className="mt-6 flex items-center gap-2 text-sm text-neutral-400">
+          <MapPin size={16} />
+          {vehicle.location}
         </div>
 
-        <div className="mt-3 flex items-center justify-between text-[11px] text-teal-300">
-          View diagnostics
-          <ChevronRight className="h-3.5 w-3.5" />
+        {/* Battery */}
+        <div className="mt-6">
+          <div className="mb-2 flex justify-between text-sm">
+            <span className="text-neutral-400">
+              Battery Health
+            </span>
+
+            <span className="font-semibold text-white">
+              {vehicle.batteryHealth}%
+            </span>
+          </div>
+
+          <Progress value={vehicle.batteryHealth} />
+        </div>
+
+        {/* Footer */}
+        <div className="mt-5 flex items-center gap-2 text-sm text-neutral-500">
+          <Zap size={14} />
+
+          <span>Last seen {vehicle.lastSeen}</span>
         </div>
       </GlowCard>
     </Link>
