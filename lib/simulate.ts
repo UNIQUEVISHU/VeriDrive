@@ -160,17 +160,29 @@ export function buildVehicle(seed: VehicleSeed, jitter: number, tick: number): V
   );
   const healthScore = aggregateHealthScore(components);
   return {
-    id: seed.id,
-    name: seed.name,
-    model: seed.model,
-    driver: seed.driver,
-    odometer: seed.odometer,
-    location: seed.location,
-    healthScore,
-    severity: worstSeverity(components),
-    lastSync: "just now",
-    components,
-  };
+  id: seed.id,
+  name: seed.name,
+  model: seed.model,
+
+  driver: seed.driver,
+
+  odometer: seed.odometer,
+
+  location: seed.location,
+
+  healthScore,
+
+  severity: worstSeverity(components),
+
+  lastSync: "just now",
+
+  components,
+
+  batteryHealth:
+    components.find((c) => c.key === "battery")?.health ?? 100,
+
+  lastSeen: "2 minutes ago",
+};
 }
 
 const RECOMMENDATIONS: Record<ComponentKey, string> = {
