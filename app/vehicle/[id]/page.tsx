@@ -30,7 +30,10 @@ export default function VehicleDetailPage() {
 
   return (
     <div>
-      <Topbar title={vehicle.name} subtitle={`${vehicle.id} · ${vehicle.model}`} />
+      <Topbar
+  title={vehicle.name}
+  subtitle={`${vehicle.id} • ${vehicle.location}`}
+/>
 
       <div className="px-6 pt-6 lg:px-10">
         <Button variant="ghost" size="sm" onClick={() => router.push("/fleet")} className="gap-1.5 px-2">
@@ -48,16 +51,53 @@ export default function VehicleDetailPage() {
 
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle>Vehicle profile</CardTitle>
-            <CardDescription>Synced from onboard telematics unit</CardDescription>
+            <CardTitle>Vehicle Information</CardTitle>
+
+<CardDescription>
+Live fleet telemetry synchronized from Edge AI device
+</CardDescription>
           </CardHeader>
           <CardContent className="grid grid-cols-2 gap-4 text-sm sm:grid-cols-4">
             <ProfileStat icon={User} label="Driver" value={vehicle.driver} />
             <ProfileStat icon={Route} label="Odometer" value={`${vehicle.odometer.toLocaleString()} km`} />
             <ProfileStat icon={MapPin} label="Location" value={vehicle.location} />
-            <ProfileStat icon={GaugeIcon} label="Last sync" value={vehicle.lastSync} />
+            <ProfileStat
+  icon={GaugeIcon}
+  label="Last Seen"
+  value={vehicle.lastSeen}
+/>
           </CardContent>
         </Card>
+        <Card className="mt-6">
+  <CardHeader>
+    <CardTitle>Battery Health</CardTitle>
+    <CardDescription>
+      Real-time battery diagnostics
+    </CardDescription>
+  </CardHeader>
+
+  <CardContent>
+    <div className="flex items-center justify-between">
+      <span className="text-neutral-400">
+        Current Health
+      </span>
+
+      <span className="text-2xl font-bold text-emerald-400">
+        {vehicle.batteryHealth}%
+      </span>
+    </div>
+
+    <Progress
+      className="mt-4"
+      value={vehicle.batteryHealth}
+    />
+
+    <p className="mt-3 text-xs text-neutral-500">
+      Estimated battery condition based on live telemetry
+      and charging cycles.
+    </p>
+  </CardContent>
+</Card>
       </section>
 
       <section className="px-6 pb-6 lg:px-10">
